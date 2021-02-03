@@ -2,6 +2,7 @@
  * External dependencies
  */
 import classnames from 'classnames';
+import { noop } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -39,6 +40,7 @@ export default function BlockNavigationBlock( {
 	siblingBlockCount,
 	showBlockMovers,
 	path,
+	highlightBlocksOnHover,
 } ) {
 	const cellRef = useRef( null );
 	const [ isHovered, setIsHovered ] = useState( false );
@@ -62,9 +64,10 @@ export default function BlockNavigationBlock( {
 		[ clientId ]
 	);
 
-	const { selectBlock: selectEditorBlock } = useDispatch(
-		'core/block-editor'
-	);
+	const {
+		selectBlock: selectEditorBlock,
+		toggleBlockHighlight,
+	} = useDispatch( 'core/block-editor' );
 
 	const hasSiblings = siblingBlockCount > 0;
 	const hasRenderedMovers = showBlockMovers && hasSiblings;
@@ -86,16 +89,34 @@ export default function BlockNavigationBlock( {
 		}
 	}, [ withExperimentalFeatures, isSelected ] );
 
+	const highlightBlock = highlightBlocksOnHover ? toggleBlockHighlight : noop;
+	const handleMouseEnter = () => {
+		setIsHovered( true );
+		highlightBlock( clientId, true );
+	};
+	const handleMouseLeave = () => {
+		setIsHovered( false );
+		highlightBlock( clientId, false );
+	};
+	const handleFocus = () => {
+		setIsFocused( true );
+		highlightBlock( clientId, true );
+	};
+	const handleBlur = () => {
+		setIsFocused( false );
+		highlightBlock( clientId, false );
+	};
+
 	return (
 		<BlockNavigationLeaf
 			className={ classnames( {
 				'is-selected': isSelected,
 				'is-dragging': isDragging,
 			} ) }
-			onMouseEnter={ () => setIsHovered( true ) }
-			onMouseLeave={ () => setIsHovered( false ) }
-			onFocus={ () => setIsFocused( true ) }
-			onBlur={ () => setIsFocused( false ) }
+			onMouseEnter={ handleMouseEnter }
+			onMouseLeave={ handleMouseLeave }
+			onFocus={ handleFocus }
+			onBlur={ handleBlur }
 			level={ level }
 			position={ position }
 			rowCount={ rowCount }
